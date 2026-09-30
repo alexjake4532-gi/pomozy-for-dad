@@ -1,0 +1,1450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pomozy - Cozy Focus Timer</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>☕</text></svg>" />
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React 18, ReactDOM, and Babel -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-gray-900 select-none overflow-x-hidden">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useCallback, useRef, useMemo } = React;
+
+        const Icon = ({ name, size = 24, className = "", strokeWidth = 2, fill = "none" }) => {
+            const paths = {
+                play: <path d="M6 4l15 8-15 8V4z" fill={fill !== "none" ? "currentColor" : "none"} stroke={fill !== "none" ? "none" : "currentColor"} />,
+                pause: (
+                    <>
+                        <rect x="6" y="4" width="4" height="16" fill={fill !== "none" ? "currentColor" : "none"} stroke={fill !== "none" ? "none" : "currentColor"} rx="1"/>
+                        <rect x="14" y="4" width="4" height="16" fill={fill !== "none" ? "currentColor" : "none"} stroke={fill !== "none" ? "none" : "currentColor"} rx="1"/>
+                    </>
+                ),
+                rotateCcw: (
+                    <>
+                        <polyline points="1 4 1 10 7 10"/>
+                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                    </>
+                ),
+                flame: <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>,
+                coffee: (
+                    <>
+                        <path d="M17 8h1a4 4 0 1 1 0 8h-1"/>
+                        <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/>
+                        <line x1="6" y1="2" x2="6" y2="4"/>
+                        <line x1="10" y1="2" x2="10" y2="4"/>
+                        <line x1="14" y1="2" x2="14" y2="4"/>
+                    </>
+                ),
+                sun: (
+                    <>
+                        <circle cx="12" cy="12" r="4"/>
+                        <line x1="12" y1="2" x2="12" y2="4"/>
+                        <line x1="12" y1="20" x2="12" y2="22"/>
+                        <line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/>
+                        <line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/>
+                        <line x1="2" y1="12" x2="4" y2="12"/>
+                        <line x1="20" y1="12" x2="22" y2="12"/>
+                        <line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/>
+                        <line x1="17.66" y1="6.34" x2="19.07" y2="4.93"/>
+                    </>
+                ),
+                moon: <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>,
+                check: <polyline points="20 6 9 17 4 12"/>,
+                timerIcon: (
+                    <>
+                        <circle cx="12" cy="14" r="8"/>
+                        <line x1="12" y1="2" x2="12" y2="6"/>
+                        <line x1="8" y1="2" x2="16" y2="2"/>
+                        <line x1="12" y1="14" x2="15.5" y2="10.5"/>
+                    </>
+                ),
+                barChart2: (
+                    <>
+                        <line x1="18" y1="20" x2="18" y2="10"/>
+                        <line x1="12" y1="20" x2="12" y2="4"/>
+                        <line x1="6" y1="20" x2="6" y2="14"/>
+                    </>
+                ),
+                trash2: (
+                    <>
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                        <line x1="10" y1="11" x2="10" y2="17"/>
+                        <line x1="14" y1="11" x2="14" y2="17"/>
+                    </>
+                ),
+                calendar: (
+                    <>
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </>
+                ),
+                save: (
+                    <>
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                        <polyline points="17 21 17 13 7 13 7 21"/>
+                        <polyline points="7 3 7 8 15 8"/>
+                    </>
+                ),
+                settings: (
+                    <>
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    </>
+                ),
+                bell: (
+                    <>
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                    </>
+                ),
+                stopSquare: <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>,
+                sparkles: (
+                    <path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4L12 2zM19 16l1.2 3.3L23.5 20.5l-3.3 1.2L19 25l-1.2-3.3-3.3-1.2 3.3-1.2L19 16z" />
+                )
+            };
+            return (
+                <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width={size} 
+                    height={size} 
+                    viewBox="0 0 24 24" 
+                    fill={fill} 
+                    stroke={fill !== "none" ? "none" : "currentColor"} 
+                    strokeWidth={strokeWidth} 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    className={className}
+                >
+                    {paths[name] || null}
+                </svg>
+            );
+        };
+
+        const AudioEngine = {
+            ctx: null,
+            intervalId: null,
+            isPlaying: false,
+            activeNodes: [],
+            
+            init() {
+                if (!this.ctx) {
+                    const AC = window.AudioContext || window.webkitAudioContext;
+                    if (AC) this.ctx = new AC();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            },
+
+            start(soundId) {
+                this.stop();
+                this.init();
+                if (!this.ctx) return;
+                this.isPlaying = true;
+                this.activeNodes = [];
+                const now = this.ctx.currentTime;
+
+                if (soundId === 'zen') {
+                    const osc1 = this.ctx.createOscillator();
+                    const osc2 = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    
+                    osc1.type = 'sine';
+                    osc1.frequency.value = 432;
+                    osc2.type = 'sine';
+                    osc2.frequency.value = 435;
+
+                    gain.gain.setValueAtTime(0, now);
+                    gain.gain.linearRampToValueAtTime(0.3, now + 1.2);
+
+                    osc1.connect(gain);
+                    osc2.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc1.start(now);
+                    osc2.start(now);
+                    this.activeNodes.push({ osc1, osc2, gain });
+                    return;
+                }
+
+                const playPattern = () => {
+                    if (!this.isPlaying) return;
+                    const cTime = this.ctx.currentTime;
+                    
+                    if (soundId === 'cozy') {
+                        [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+                            const osc = this.ctx.createOscillator();
+                            const gain = this.ctx.createGain();
+                            osc.type = 'sine';
+                            osc.frequency.value = freq;
+                            const startTime = cTime + (i * 0.16);
+                            gain.gain.setValueAtTime(0, startTime);
+                            gain.gain.linearRampToValueAtTime(0.25, startTime + 0.08);
+                            gain.gain.exponentialRampToValueAtTime(0.001, startTime + 2.2);
+                            osc.connect(gain);
+                            gain.connect(this.ctx.destination);
+                            osc.start(startTime);
+                            osc.stop(startTime + 2.2);
+                        });
+                    } else if (soundId === 'digital') {
+                        [0, 0.14, 0.28].forEach(offset => {
+                            const startTime = cTime + offset;
+                            const osc = this.ctx.createOscillator();
+                            const gain = this.ctx.createGain();
+                            osc.type = 'square';
+                            osc.frequency.value = 880;
+                            gain.gain.setValueAtTime(0, startTime);
+                            gain.gain.setValueAtTime(0.08, startTime + 0.01);
+                            gain.gain.setValueAtTime(0.08, startTime + 0.09);
+                            gain.gain.setValueAtTime(0, startTime + 0.1);
+                            osc.connect(gain);
+                            gain.connect(this.ctx.destination);
+                            osc.start(startTime);
+                            osc.stop(startTime + 0.12);
+                        });
+                    }
+                };
+                
+                playPattern();
+                const intervalTime = soundId === 'digital' ? 950 : 2800;
+                this.intervalId = setInterval(playPattern, intervalTime);
+            },
+
+            stop() {
+                this.isPlaying = false;
+                if (this.intervalId) {
+                    clearInterval(this.intervalId);
+                    this.intervalId = null;
+                }
+                
+                if (this.activeNodes.length > 0 && this.ctx) {
+                    const now = this.ctx.currentTime;
+                    this.activeNodes.forEach(({ osc1, osc2, gain }) => {
+                        try {
+                            gain.gain.cancelScheduledValues(now);
+                            gain.gain.setValueAtTime(gain.gain.value, now);
+                            gain.gain.linearRampToValueAtTime(0.0001, now + 0.6);
+                            setTimeout(() => {
+                                try { osc1.stop(); osc2.stop(); } catch (e) {}
+                            }, 650);
+                        } catch (e) {}
+                    });
+                    this.activeNodes = [];
+                }
+            }
+        };
+
+        const THEMES = {
+            // === 3 LIGHT THEMES ===
+            peach: { 
+                id: 'peach', 
+                name: 'Peach Sunset', 
+                isDark: false,
+                bgMain: '#FAF0E6', 
+                bgCard: '#FFFFFF', 
+                primary: '#F4A261', 
+                ringBg: '#FCE7D8', 
+                textDark: '#5D4037', 
+                textLight: '#A1887F', 
+                pillBg: 'rgba(0,0,0,0.05)',
+                activePillBg: '#FFFFFF',
+                itemBg: 'rgba(0,0,0,0.04)',
+                itemBgHover: 'rgba(0,0,0,0.08)',
+                borderSubtle: 'rgba(0,0,0,0.06)',
+                shadow: 'rgba(244, 162, 97, 0.32)',
+                glow1: '#FFB26B',
+                glow2: '#FF8474',
+                glow3: '#FFD369',
+                glow4: '#FF7597'
+            },
+            mint: { 
+                id: 'mint', 
+                name: 'Emerald Mint', 
+                isDark: false,
+                bgMain: '#F0F9F5', 
+                bgCard: '#FFFFFF', 
+                primary: '#4E9F7A', 
+                ringBg: '#D8ECE2', 
+                textDark: '#1E352B', 
+                textLight: '#6B9080', 
+                pillBg: 'rgba(0,0,0,0.05)',
+                activePillBg: '#FFFFFF',
+                itemBg: 'rgba(0,0,0,0.04)',
+                itemBgHover: 'rgba(0,0,0,0.08)',
+                borderSubtle: 'rgba(0,0,0,0.06)',
+                shadow: 'rgba(78, 159, 122, 0.32)',
+                glow1: '#66D2A8',
+                glow2: '#38A3A5',
+                glow3: '#B7E4C7',
+                glow4: '#52B788'
+            },
+            lavender: { 
+                id: 'lavender', 
+                name: 'Dream Lavender', 
+                isDark: false,
+                bgMain: '#F5F2FB', 
+                bgCard: '#FFFFFF', 
+                primary: '#9D76C1', 
+                ringBg: '#E9E2F5', 
+                textDark: '#3A2E45', 
+                textLight: '#8D7B9C', 
+                pillBg: 'rgba(0,0,0,0.05)',
+                activePillBg: '#FFFFFF',
+                itemBg: 'rgba(0,0,0,0.04)',
+                itemBgHover: 'rgba(0,0,0,0.08)',
+                borderSubtle: 'rgba(0,0,0,0.06)',
+                shadow: 'rgba(157, 118, 193, 0.32)',
+                glow1: '#CDB4DB',
+                glow2: '#A370F7',
+                glow3: '#E0AAFF',
+                glow4: '#FF99C8'
+            },
+
+            // === 3 DARK THEMES ===
+            midnight: { 
+                id: 'midnight', 
+                name: 'Cosmic Night', 
+                isDark: true,
+                bgMain: '#0B1120', 
+                bgCard: '#131D33', 
+                primary: '#38BDF8', 
+                ringBg: '#1E293B', 
+                textDark: '#F8FAFC', 
+                textLight: '#94A3B8', 
+                pillBg: 'rgba(255,255,255,0.08)',
+                activePillBg: 'rgba(255,255,255,0.16)',
+                itemBg: 'rgba(255,255,255,0.05)',
+                itemBgHover: 'rgba(255,255,255,0.09)',
+                borderSubtle: 'rgba(255,255,255,0.10)',
+                shadow: 'rgba(56, 189, 248, 0.40)',
+                glow1: '#818CF8',
+                glow2: '#C084FC',
+                glow3: '#22D3EE',
+                glow4: '#3B82F6'
+            },
+            cyberpunk: { 
+                id: 'cyberpunk', 
+                name: 'Neon Cyber', 
+                isDark: true,
+                bgMain: '#0E0817', 
+                bgCard: '#18102B', 
+                primary: '#F43F5E', 
+                ringBg: '#271740', 
+                textDark: '#FDF4FF', 
+                textLight: '#A892BA', 
+                pillBg: 'rgba(255,255,255,0.08)',
+                activePillBg: 'rgba(255,255,255,0.16)',
+                itemBg: 'rgba(255,255,255,0.05)',
+                itemBgHover: 'rgba(255,255,255,0.09)',
+                borderSubtle: 'rgba(255,255,255,0.10)',
+                shadow: 'rgba(244, 63, 94, 0.42)',
+                glow1: '#EC4899',
+                glow2: '#A855F7',
+                glow3: '#D946EF',
+                glow4: '#F43F5E'
+            },
+            forest: { 
+                id: 'forest', 
+                name: 'Abyssal Jade', 
+                isDark: true,
+                bgMain: '#06130E', 
+                bgCard: '#0C2219', 
+                primary: '#34D399', 
+                ringBg: '#153628', 
+                textDark: '#ECFDF5', 
+                textLight: '#7BA492', 
+                pillBg: 'rgba(255,255,255,0.08)',
+                activePillBg: 'rgba(255,255,255,0.16)',
+                itemBg: 'rgba(255,255,255,0.05)',
+                itemBgHover: 'rgba(255,255,255,0.09)',
+                borderSubtle: 'rgba(255,255,255,0.10)',
+                shadow: 'rgba(52, 211, 153, 0.40)',
+                glow1: '#10B981',
+                glow2: '#059669',
+                glow3: '#2DD4BF',
+                glow4: '#065F46'
+            }
+        };
+
+        const MODES_CONFIG = {
+            pomodoro: { id: 'pomodoro', name: 'Focus', icon: 'flame' },
+            shortBreak: { id: 'shortBreak', name: 'Short Break', icon: 'coffee' },
+            longBreak: { id: 'longBreak', name: 'Long Break', icon: 'moon' }
+        };
+
+        const ALARM_TYPES = [
+            { id: 'cozy', name: 'Cozy Chime', desc: 'Melodic C-Major Arpeggio' },
+            { id: 'zen', name: 'Zen Bowl', desc: 'Continuous 432Hz Resonance' },
+            { id: 'digital', name: 'Digital Beep', desc: 'Classic 3-Beep Alarm' }
+        ];
+
+        const LivelyAuroraBackground = ({ theme, isActive }) => {
+            const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
+            
+            const particles = useMemo(() => 
+                Array.from({ length: 16 }, (_, i) => ({
+                    id: i,
+                    left: `${(i * 6.3 + 4) % 94}%`,
+                    top: `${(i * 12 + 8) % 88}%`,
+                    size: 3 + (i % 3) * 2,
+                    duration: 14 + (i % 4) * 4,
+                    delay: -(i * 1.5),
+                    opacity: theme.isDark ? (0.4 + (i % 3) * 0.2) : (0.28 + (i % 3) * 0.15)
+                })), [theme.isDark]
+            );
+
+            useEffect(() => {
+                let rafId = null;
+                const handleMouseMove = (e) => {
+                    if (rafId) return;
+                    rafId = requestAnimationFrame(() => {
+                        setMousePos({
+                            x: Math.round((e.clientX / window.innerWidth) * 100),
+                            y: Math.round((e.clientY / window.innerHeight) * 100)
+                        });
+                        rafId = null;
+                    });
+                };
+                window.addEventListener('mousemove', handleMouseMove, { passive: true });
+                return () => {
+                    window.removeEventListener('mousemove', handleMouseMove);
+                    if (rafId) cancelAnimationFrame(rafId);
+                };
+            }, []);
+
+            return (
+                <div 
+                    className="fixed inset-0 pointer-events-none overflow-hidden select-none z-0 transition-colors duration-1000"
+                    style={{ backgroundColor: theme.bgMain }}
+                >
+                    {/* Micro-dot grid texture */}
+                    <div 
+                        className="absolute inset-0 transition-opacity duration-1000"
+                        style={{
+                            opacity: theme.isDark ? 0.35 : 0.22,
+                            backgroundImage: `radial-gradient(${theme.textDark} 1.2px, transparent 1.2px)`,
+                            backgroundSize: '24px 24px'
+                        }}
+                    />
+
+                    {/* Shooting star comets */}
+                    <div className="absolute top-12 right-20 w-36 h-[2px] bg-gradient-to-r from-transparent via-white to-white rounded-full animate-shooting-star-1 opacity-0 pointer-events-none shadow-[0_0_10px_white]" />
+                    <div className="absolute top-40 right-1/3 w-48 h-[2px] bg-gradient-to-r from-transparent via-white to-white rounded-full animate-shooting-star-2 opacity-0 pointer-events-none shadow-[0_0_10px_white]" />
+                    <div className="absolute top-24 right-12 w-32 h-[2px] bg-gradient-to-r from-transparent via-white to-white rounded-full animate-shooting-star-3 opacity-0 pointer-events-none shadow-[0_0_10px_white]" />
+
+                    {/* Cursor responsive ambient glow */}
+                    <div 
+                        className="absolute w-80 h-80 rounded-full blur-3xl opacity-30 transition-all duration-300 ease-out"
+                        style={{
+                            background: `radial-gradient(circle, ${theme.glow1} 0%, ${theme.glow2} 60%, transparent 80%)`,
+                            left: `${mousePos.x}%`,
+                            top: `${mousePos.y}%`,
+                            transform: 'translate3d(-50%, -50%, 0)'
+                        }}
+                    />
+
+                    {/* Aurora Bloom 1: Top-Left */}
+                    <div 
+                        className={`absolute -top-24 -left-24 w-96 h-96 sm:w-[520px] sm:h-[520px] rounded-full blur-3xl opacity-45 animate-aurora-1 transition-all duration-700 ${isActive ? 'opacity-70 scale-110' : ''}`}
+                        style={{
+                            background: `radial-gradient(circle, ${theme.glow1} 15%, ${theme.glow2} 65%, transparent 80%)`
+                        }}
+                    />
+
+                    {/* Aurora Bloom 2: Bottom-Right */}
+                    <div 
+                        className={`absolute -bottom-28 -right-28 w-[380px] h-[380px] sm:w-[560px] sm:h-[560px] rounded-full blur-3xl opacity-40 animate-aurora-2 transition-all duration-700 ${isActive ? 'opacity-65 scale-105' : ''}`}
+                        style={{
+                            background: `radial-gradient(circle, ${theme.glow3} 15%, ${theme.glow4} 65%, transparent 80%)`
+                        }}
+                    />
+
+                    {/* Aurora Bloom 3: Ambient Center Orb */}
+                    <div 
+                        className={`absolute top-1/2 left-1/2 w-[340px] h-[340px] sm:w-[480px] sm:h-[480px] rounded-full blur-3xl opacity-25 animate-aurora-3 transition-all duration-700 ${isActive ? 'opacity-50 scale-120' : ''}`}
+                        style={{
+                            background: `radial-gradient(circle, ${theme.primary} 0%, ${theme.glow1} 50%, transparent 75%)`,
+                            transform: 'translate3d(-50%, -50%, 0)'
+                        }}
+                    />
+
+                    {/* Floating ambient fireflies */}
+                    {particles.map(p => (
+                        <div
+                            key={p.id}
+                            className="absolute rounded-full pointer-events-none animate-bokeh-drift"
+                            style={{
+                                left: p.left,
+                                top: p.top,
+                                width: `${p.size}px`,
+                                height: `${p.size}px`,
+                                backgroundColor: p.id % 2 === 0 ? theme.primary : '#FFFFFF',
+                                opacity: p.opacity,
+                                boxShadow: `0 0 10px 2px ${theme.primary}`,
+                                animationDuration: `${p.duration}s`,
+                                animationDelay: `${p.delay}s`
+                            }}
+                        />
+                    ))}
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [activeThemeId, setActiveThemeId] = useState('peach');
+            const [activeMode, setActiveMode] = useState('pomodoro');
+            const [isActive, setIsActive] = useState(false);
+            const [isRinging, setIsRinging] = useState(false);
+            const [currentView, setCurrentView] = useState('timer');
+            const [cycleCount, setCycleCount] = useState(0); 
+            const [showClearConfirm, setShowClearConfirm] = useState(false);
+            const [previewId, setPreviewId] = useState(null);
+            const [cardTilt, setCardTilt] = useState({ rx: 0, ry: 0 });
+            const [confettiBurst, setConfettiBurst] = useState([]);
+            
+            const [sessions, setSessions] = useState(() => {
+                try { return JSON.parse(localStorage.getItem('cozyPomodoroSessions')) || []; } catch (e) { return []; }
+            });
+            const [alarmSound, setAlarmSound] = useState(() => {
+                try { return localStorage.getItem('cozyPomodoroAlarm') || 'cozy'; } catch (e) { return 'cozy'; }
+            });
+
+            const [durations, setDurations] = useState({ pomodoro: 25, shortBreak: 5, longBreak: 15 });
+            const [timeLeft, setTimeLeft] = useState(durations.pomodoro * 60);
+            
+            const [isEditing, setIsEditing] = useState(false);
+            const [editHours, setEditHours] = useState('');
+            const [editMins, setEditMins] = useState('');
+            const hoursInputRef = useRef(null);
+
+            const theme = THEMES[activeThemeId] || THEMES.peach;
+            const currentModeInfo = MODES_CONFIG[activeMode] || MODES_CONFIG.pomodoro;
+            const currentTotalSeconds = durations[activeMode] * 60;
+
+            const handleCardMouseMove = (e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const midX = rect.width / 2;
+                const midY = rect.height / 2;
+                const rx = ((y - midY) / midY) * -5;
+                const ry = ((x - midX) / midX) * 5;
+                setCardTilt({ rx, ry });
+            };
+
+            const handleCardMouseLeave = () => {
+                setCardTilt({ rx: 0, ry: 0 });
+            };
+
+            const triggerConfetti = () => {
+                const colors = [theme.primary, theme.glow1, theme.glow2, '#FFD166', '#06D6A0', '#118AB2'];
+                const pieces = Array.from({ length: 32 }, (_, i) => {
+                    const angle = (Math.PI * 2 * i) / 32 + (Math.random() - 0.5);
+                    const dist = 90 + Math.random() * 120;
+                    return {
+                        id: `${Date.now()}-${i}`,
+                        cx: `${Math.cos(angle) * dist}px`,
+                        cy: `${Math.sin(angle) * dist}px`,
+                        color: colors[i % colors.length],
+                        crot: `${(Math.random() - 0.5) * 720}deg`,
+                        size: 6 + Math.random() * 7,
+                        isRound: i % 2 === 0
+                    };
+                });
+                setConfettiBurst(pieces);
+                setTimeout(() => setConfettiBurst([]), 2500);
+            };
+
+            useEffect(() => { 
+                try { localStorage.setItem('cozyPomodoroSessions', JSON.stringify(sessions)); } catch(e) {}
+            }, [sessions]);
+
+            useEffect(() => { 
+                try { localStorage.setItem('cozyPomodoroAlarm', alarmSound); } catch(e) {}
+            }, [alarmSound]);
+
+            useEffect(() => {
+                return () => AudioEngine.stop();
+            }, []);
+
+            const switchMode = useCallback((modeId) => {
+                setActiveMode(modeId);
+                setIsActive(false);
+                setIsRinging(false);
+                AudioEngine.stop();
+                setTimeLeft(durations[modeId] * 60);
+                setIsEditing(false);
+            }, [durations]);
+
+            const triggerAlarm = useCallback(() => {
+                setIsActive(false);
+                setIsRinging(true);
+                AudioEngine.start(alarmSound);
+                triggerConfetti();
+            }, [alarmSound, theme]);
+
+            const handleStopAlarm = () => {
+                AudioEngine.stop();
+                setIsRinging(false);
+                
+                const newSession = { 
+                    id: Date.now().toString(), 
+                    modeId: activeMode, 
+                    duration: durations[activeMode], 
+                    timestamp: Date.now() 
+                };
+                setSessions(prev => [newSession, ...prev]);
+                
+                if (activeMode === 'pomodoro') {
+                    const newCycleCount = cycleCount + 1;
+                    if (newCycleCount >= 4) {
+                        setCycleCount(4); 
+                        switchMode('longBreak');
+                    } else {
+                        setCycleCount(newCycleCount);
+                        switchMode('shortBreak');
+                    }
+                } else if (activeMode === 'longBreak') {
+                    setCycleCount(0);
+                    switchMode('pomodoro');
+                } else if (activeMode === 'shortBreak') {
+                    switchMode('pomodoro');
+                }
+            };
+
+            const clearStats = () => {
+                setSessions([]);
+                setShowClearConfirm(false);
+            };
+
+            useEffect(() => {
+                let interval = null;
+                if (isActive && timeLeft > 0) {
+                    interval = setInterval(() => setTimeLeft((t) => t - 1), 1000);
+                } else if (isActive && timeLeft === 0) {
+                    triggerAlarm();
+                }
+                return () => clearInterval(interval);
+            }, [isActive, timeLeft, triggerAlarm]);
+
+            useEffect(() => {
+                if (isRinging) {
+                    document.title = `🔔 TIME'S UP - ${currentModeInfo.name}`;
+                } else if (!isEditing && currentView === 'timer') {
+                    const h = Math.floor(timeLeft / 3600);
+                    const m = Math.floor((timeLeft % 3600) / 60).toString().padStart(2, '0');
+                    const s = (timeLeft % 60).toString().padStart(2, '0');
+                    const timeString = h > 0 ? `${h}:${m}:${s}` : `${m}:${s}`;
+                    document.title = isActive ? `${timeString} • ${currentModeInfo.name}` : 'Pomozy';
+                } else {
+                    document.title = 'Pomozy - Cozy Focus Timer';
+                }
+            }, [timeLeft, isActive, isRinging, currentModeInfo.name, isEditing, currentView]);
+
+            const toggleTimer = () => {
+                if (isEditing) handleEditSubmit(); 
+                AudioEngine.init();
+                setIsActive(!isActive);
+            };
+
+            const resetTimer = () => {
+                setIsActive(false);
+                setIsEditing(false);
+                setTimeLeft(durations[activeMode] * 60);
+            };
+
+            const handleTimeClick = () => {
+                if (isRinging) return;
+                setIsActive(false);
+                const currentMins = durations[activeMode];
+                setEditHours(Math.floor(currentMins / 60).toString());
+                setEditMins((currentMins % 60).toString());
+                setIsEditing(true);
+                setTimeout(() => hoursInputRef.current?.focus(), 50);
+            };
+
+            const handleEditSubmit = () => {
+                let h = parseInt(editHours, 10);
+                let m = parseInt(editMins, 10);
+                if (isNaN(h)) h = 0; 
+                if (isNaN(m)) m = 0;
+                let totalNewMins = (h * 60) + m;
+                if (totalNewMins < 1) totalNewMins = 1; 
+                if (totalNewMins > 600) totalNewMins = 600; 
+                const newDurations = { ...durations, [activeMode]: totalNewMins };
+                setDurations(newDurations);
+                setTimeLeft(totalNewMins * 60);
+                setIsEditing(false);
+            };
+
+            const togglePreview = (id) => {
+                if (previewId === id) {
+                    AudioEngine.stop();
+                    setPreviewId(null);
+                } else {
+                    setAlarmSound(id);
+                    AudioEngine.start(id);
+                    setPreviewId(id);
+                }
+            };
+
+            const handleViewChange = (view) => {
+                if (previewId) {
+                    AudioEngine.stop();
+                    setPreviewId(null);
+                }
+                setCurrentView(view);
+            };
+
+            const formatTimeDisplay = (seconds) => {
+                const h = Math.floor(seconds / 3600);
+                const m = Math.floor((seconds % 3600) / 60);
+                const s = seconds % 60;
+                if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            };
+
+            const formatStatsDate = (timestamp) => {
+                return new Date(timestamp).toLocaleDateString(undefined, { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+            };
+
+            const ringRadius = 135;
+            const ringCircumference = 2 * Math.PI * ringRadius;
+            const progress = 1 - (timeLeft / Math.max(1, currentTotalSeconds));
+            const strokeDashoffset = isRinging ? 0 : Math.max(0, Math.min(ringCircumference, progress * ringCircumference));
+            
+            const angle = progress * 2 * Math.PI - Math.PI / 2;
+            const cometX = 160 + ringRadius * Math.cos(angle);
+            const cometY = 160 + ringRadius * Math.sin(angle);
+
+            const totalFocusMinutes = sessions.filter(s => s.modeId === 'pomodoro').reduce((acc, curr) => acc + curr.duration, 0);
+            const totalFocusHours = Math.floor(totalFocusMinutes / 60);
+            const remainingFocusMins = totalFocusMinutes % 60;
+
+            const lightThemes = Object.values(THEMES).filter(t => !t.isDark);
+            const darkThemes = Object.values(THEMES).filter(t => t.isDark);
+
+            return (
+                <>
+                    {/* Embedded keyframe styles */}
+                    <style>{`
+                        :root { font-family: 'Nunito', sans-serif; }
+                        
+                        /* Shooting stars */
+                        @keyframes shootingStar {
+                            0% { transform: translate3d(0, 0, 0) rotate(-35deg) scaleX(0); opacity: 0; }
+                            15% { opacity: 1; transform: translate3d(-60px, 45px, 0) rotate(-35deg) scaleX(1); }
+                            40% { opacity: 0.8; transform: translate3d(-240px, 180px, 0) rotate(-35deg) scaleX(1.4); }
+                            70%, 100% { opacity: 0; transform: translate3d(-380px, 280px, 0) rotate(-35deg) scaleX(0.2); }
+                        }
+                        .animate-shooting-star-1 { animation: shootingStar 8s cubic-bezier(0.25, 1, 0.5, 1) infinite; }
+                        .animate-shooting-star-2 { animation: shootingStar 11s cubic-bezier(0.25, 1, 0.5, 1) 4s infinite; }
+                        .animate-shooting-star-3 { animation: shootingStar 14s cubic-bezier(0.25, 1, 0.5, 1) 7s infinite; }
+
+                        /* Radiating energetic wave ripples */
+                        @keyframes ripplePulse {
+                            0% { transform: scale(0.92); opacity: 0.65; }
+                            50% { opacity: 0.3; }
+                            100% { transform: scale(1.35); opacity: 0; }
+                        }
+                        .animate-ripple-1 { animation: ripplePulse 3.2s cubic-bezier(0.2, 0.8, 0.4, 1) infinite; }
+                        .animate-ripple-2 { animation: ripplePulse 3.2s cubic-bezier(0.2, 0.8, 0.4, 1) 1.1s infinite; }
+                        .animate-ripple-3 { animation: ripplePulse 3.2s cubic-bezier(0.2, 0.8, 0.4, 1) 2.2s infinite; }
+
+                        /* Holographic perimeter gradient */
+                        @keyframes rotateGradient {
+                            0% { filter: hue-rotate(0deg); }
+                            100% { filter: hue-rotate(360deg); }
+                        }
+                        .animate-shimmer-border {
+                            animation: rotateGradient 12s linear infinite;
+                        }
+
+                        /* Sparkle pulse on the orbiting comet spark */
+                        @keyframes cometGlow {
+                            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 6px currentColor); }
+                            50% { transform: scale(1.45); filter: drop-shadow(0 0 14px currentColor); }
+                        }
+                        .animate-comet { animation: cometGlow 1.8s ease-in-out infinite; }
+
+                        /* Equalizer dancing frequency bars */
+                        @keyframes eqDance1 { 0%, 100% { height: 6px; } 50% { height: 20px; } }
+                        @keyframes eqDance2 { 0%, 100% { height: 18px; } 50% { height: 8px; } }
+                        @keyframes eqDance3 { 0%, 100% { height: 10px; } 50% { height: 22px; } }
+                        .animate-eq-1 { animation: eqDance1 0.75s ease-in-out infinite; }
+                        .animate-eq-2 { animation: eqDance2 0.6s ease-in-out infinite 0.15s; }
+                        .animate-eq-3 { animation: eqDance3 0.85s ease-in-out infinite 0.3s; }
+
+                        /* Confetti fall physics */
+                        @keyframes confettiDrift {
+                            0% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); opacity: 1; }
+                            100% { transform: translate3d(var(--cx), var(--cy), 0) rotate(var(--crot)) scale(0.6); opacity: 0; }
+                        }
+                        .animate-confetti {
+                            animation: confettiDrift 2.4s cubic-bezier(0.12, 0.9, 0.3, 1) forwards;
+                        }
+
+                        /* Aurora Bloom Keyframes */
+                        @keyframes auroraMove1 {
+                            0%, 100% { transform: translate3d(0px, 0px, 0px) scale(1); }
+                            50% { transform: translate3d(60px, 40px, 0px) scale(1.15); }
+                        }
+                        @keyframes auroraMove2 {
+                            0%, 100% { transform: translate3d(0px, 0px, 0px) scale(1); }
+                            50% { transform: translate3d(-50px, -45px, 0px) scale(1.12); }
+                        }
+                        @keyframes auroraMove3 {
+                            0%, 100% { transform: translate3d(-50%, -50%, 0) scale(1); }
+                            50% { transform: translate3d(-46%, -53%, 0) scale(1.22); }
+                        }
+                        .animate-aurora-1 { animation: auroraMove1 18s ease-in-out infinite; }
+                        .animate-aurora-2 { animation: auroraMove2 22s ease-in-out infinite; }
+                        .animate-aurora-3 { animation: auroraMove3 15s ease-in-out infinite; }
+
+                        /* Floating Fireflies Keyframes */
+                        @keyframes bokehFloat {
+                            0%, 100% { transform: translate3d(0px, 0px, 0); }
+                            25% { transform: translate3d(18px, -22px, 0); }
+                            50% { transform: translate3d(-14px, -40px, 0); }
+                            75% { transform: translate3d(-24px, -15px, 0); }
+                        }
+                        .animate-bokeh-drift { animation: bokehFloat ease-in-out infinite; }
+
+                        /* Gentle, GPU-accelerated card breathing */
+                        @keyframes gentleFloat {
+                            0%, 100% { transform: translateY(0px); }
+                            50% { transform: translateY(-7px); }
+                        }
+                        .animate-float { animation: gentleFloat 5s ease-in-out infinite; }
+
+                        /* Alarm Pulse */
+                        @keyframes pulseAlarm {
+                            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+                            70% { transform: scale(1.08); box-shadow: 0 0 0 28px rgba(239, 68, 68, 0); }
+                            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+                        }
+                        .animate-pulse-alarm { animation: pulseAlarm 1.4s ease-out infinite; }
+
+                        /* Wavy Brand Title */
+                        @keyframes wavyText {
+                            0%, 100% { transform: translateY(0) rotate(0deg); }
+                            25% { transform: translateY(-3px) rotate(-3deg); }
+                            75% { transform: translateY(2px) rotate(3deg); }
+                        }
+                        .fun-letter { 
+                            display: inline-block; 
+                            animation: wavyText 3.5s ease-in-out infinite; 
+                        }
+                        .fun-letter:nth-child(1) { animation-delay: 0.0s; }
+                        .fun-letter:nth-child(2) { animation-delay: 0.1s; }
+                        .fun-letter:nth-child(3) { animation-delay: 0.2s; }
+                        .fun-letter:nth-child(4) { animation-delay: 0.3s; }
+                        .fun-letter:nth-child(5) { animation-delay: 0.4s; }
+                        .fun-letter:nth-child(6) { animation-delay: 0.5s; }
+
+                        .cozy-shadow { box-shadow: 0 25px 60px -15px var(--theme-shadow); }
+                        .cozy-shadow-inner { box-shadow: inset 0 3px 10px rgba(0,0,0,0.12); }
+
+                        input[type="number"]::-webkit-inner-spin-button, 
+                        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+                        input[type="number"] { -moz-appearance: textfield; }
+
+                        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+                        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+                        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: var(--theme-text-light); border-radius: 10px; opacity: 0.4; }
+                    `}</style>
+
+                    <LivelyAuroraBackground theme={theme} isActive={isActive} />
+
+                    {}
+                    <div 
+                        className="min-h-screen w-full flex flex-col items-center justify-center p-4 sm:p-6 relative z-10 transition-colors duration-700"
+                        style={{ 
+                            color: theme.textDark, 
+                            '--theme-shadow': theme.shadow, 
+                            '--theme-text-light': theme.textLight,
+                            perspective: '1200px'
+                        }}
+                    >
+                        {/* 3D Perspective Floating Card */}
+                        <div 
+                            onMouseMove={handleCardMouseMove}
+                            onMouseLeave={handleCardMouseLeave}
+                            className="relative rounded-[2.5rem] sm:rounded-[3rem] p-6 sm:p-10 w-full max-w-lg transition-transform duration-200 ease-out cozy-shadow flex flex-col items-center min-h-[660px] animate-float backdrop-blur-md"
+                            style={{ 
+                                backgroundColor: theme.bgCard,
+                                border: `1px solid ${theme.borderSubtle}`,
+                                transform: `rotateX(${cardTilt.rx}deg) rotateY(${cardTilt.ry}deg) translateZ(0)`
+                            }}
+                        >
+                            {/* Animated Holographic Border Shimmer on Active State */}
+                            <div 
+                                className={`absolute -inset-[2px] rounded-[2.6rem] sm:rounded-[3.1rem] pointer-events-none -z-10 opacity-0 transition-opacity duration-700 ${isActive ? 'opacity-80 animate-shimmer-border' : ''}`}
+                                style={{
+                                    background: `linear-gradient(135deg, ${theme.primary}, ${theme.glow1}, ${theme.glow2}, ${theme.primary})`,
+                                    filter: 'blur(3px)'
+                                }}
+                            />
+
+                            {/* Header */}
+                            <div className="w-full flex justify-between items-center mb-6">
+                                <div className="w-8 flex items-center justify-center">
+                                    {isActive && (
+                                        <span className="w-2.5 h-2.5 rounded-full animate-ping" style={{ backgroundColor: theme.primary }} />
+                                    )}
+                                </div>
+                                <h1 className="text-3xl font-black tracking-tighter opacity-95 flex items-center justify-center">
+                                    {currentView === 'timer' ? (
+                                        <div className="flex gap-[1px] hover:scale-105 transition-transform cursor-default" title="Pomozy">
+                                            <span className="fun-letter" style={{ color: theme.primary }}>P</span>
+                                            <span className="fun-letter" style={{ color: theme.textDark }}>o</span>
+                                            <span className="fun-letter" style={{ color: theme.primary }}>m</span>
+                                            <span className="fun-letter" style={{ color: theme.textDark }}>o</span>
+                                            <span className="fun-letter" style={{ color: theme.primary }}>z</span>
+                                            <span className="fun-letter" style={{ color: theme.textDark }}>y</span>
+                                        </div>
+                                    ) : currentView === 'stats' ? 'Your Journey' : 'Settings'}
+                                </h1>
+                                <div className="w-8"></div>
+                            </div>
+                                
+                            {/* View Router */}
+                            <div className="flex-1 w-full flex flex-col items-center">
+                                
+                                {currentView === 'timer' && (
+                                    <div className="flex flex-col items-center w-full relative">
+                                        
+                                        {/* Mode Switcher */}
+                                        <div 
+                                            className="flex p-1.5 rounded-full cozy-shadow-inner mb-6 w-full sm:w-auto overflow-x-auto custom-scrollbar"
+                                            style={{ backgroundColor: theme.pillBg }}
+                                        >
+                                            {Object.values(MODES_CONFIG).map((mode) => {
+                                                const isSelected = activeMode === mode.id;
+                                                return (
+                                                    <button
+                                                        key={mode.id}
+                                                        onClick={() => switchMode(mode.id)}
+                                                        className={`flex items-center justify-center space-x-2 px-4 sm:px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 flex-shrink-0 ${
+                                                            isSelected ? 'shadow-sm scale-105' : 'opacity-60 hover:opacity-100 hover:scale-105 active:scale-95'
+                                                        }`}
+                                                        style={{ 
+                                                            backgroundColor: isSelected ? theme.activePillBg : 'transparent',
+                                                            color: isSelected ? theme.primary : theme.textDark 
+                                                        }}
+                                                    >
+                                                        <Icon name={mode.icon} size={18} strokeWidth={isSelected ? 3 : 2} />
+                                                        <span className="hidden sm:inline-block">{mode.name}</span>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+
+                                        {/* Cycle Tracker */}
+                                        <div className="flex items-center gap-2.5 mb-8" title="Pomodoro Cycle Progress (4 = Long Break)">
+                                            {[1, 2, 3, 4].map((step) => (
+                                                <div 
+                                                    key={step}
+                                                    className="w-2.5 h-2.5 rounded-full transition-all duration-500 shadow-xs"
+                                                    style={{ 
+                                                        backgroundColor: step <= cycleCount ? theme.primary : theme.ringBg,
+                                                        transform: step <= cycleCount ? 'scale(1.3)' : 'scale(1)',
+                                                        opacity: step <= cycleCount ? 1 : 0.45,
+                                                        boxShadow: step <= cycleCount ? `0 0 8px ${theme.primary}` : 'none'
+                                                    }}
+                                                />
+                                            ))}
+                                        </div>
+
+                                        {/* Timer Ring Container */}
+                                        <div className="relative flex justify-center items-center mb-8 w-[270px] h-[270px] sm:w-[310px] sm:h-[310px]">
+                                            
+                                            {/* Radiating Soundwave / Aura Ripples when Active */}
+                                            {isActive && (
+                                                <>
+                                                    <div 
+                                                        className="absolute inset-0 rounded-full animate-ripple-1 pointer-events-none"
+                                                        style={{ border: `2px solid ${theme.primary}` }}
+                                                    />
+                                                    <div 
+                                                        className="absolute inset-0 rounded-full animate-ripple-2 pointer-events-none"
+                                                        style={{ border: `2px solid ${theme.glow1}` }}
+                                                    />
+                                                    <div 
+                                                        className="absolute inset-0 rounded-full animate-ripple-3 pointer-events-none"
+                                                        style={{ border: `2px solid ${theme.primary}` }}
+                                                    />
+                                                </>
+                                            )}
+
+                                            <svg className="w-full h-full -rotate-90 overflow-visible" viewBox="0 0 320 320">
+                                                <defs>
+                                                    <linearGradient id="timerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                                        <stop offset="0%" stopColor={theme.primary} />
+                                                        <stop offset="100%" stopColor={theme.glow1} />
+                                                    </linearGradient>
+                                                    <filter id="cometGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
+                                                        <feGaussianBlur stdDeviation="3" result="blur" />
+                                                        <feMerge>
+                                                            <feMergeNode in="blur" />
+                                                            <feMergeNode in="SourceGraphic" />
+                                                        </feMerge>
+                                                    </filter>
+                                                </defs>
+
+                                                {/* Background Circle */}
+                                                <circle 
+                                                    cx="160" 
+                                                    cy="160" 
+                                                    r={ringRadius} 
+                                                    fill="none" 
+                                                    stroke={theme.ringBg} 
+                                                    strokeWidth="14" 
+                                                    strokeLinecap="round" 
+                                                />
+                                                {/* Animated Progress Circle */}
+                                                <circle 
+                                                    cx="160" 
+                                                    cy="160" 
+                                                    r={ringRadius} 
+                                                    fill="none" 
+                                                    stroke="url(#timerGradient)" 
+                                                    strokeWidth="14" 
+                                                    strokeLinecap="round" 
+                                                    strokeDasharray={ringCircumference} 
+                                                    strokeDashoffset={strokeDashoffset} 
+                                                    style={{ 
+                                                        transition: isRinging ? 'none' : 'stroke-dashoffset 0.8s ease-out, stroke 0.4s ease' 
+                                                    }}
+                                                />
+
+                                                {/* Orbiting Comet Head on Progress Tip */}
+                                                {progress > 0.01 && progress < 0.999 && !isRinging && (
+                                                    <g transform={`rotate(90 160 160)`}>
+                                                        <circle 
+                                                            cx={cometX} 
+                                                            cy={cometY} 
+                                                            r="7" 
+                                                            fill="#FFFFFF" 
+                                                            stroke={theme.primary}
+                                                            strokeWidth="3"
+                                                            filter="url(#cometGlowFilter)"
+                                                            className="animate-comet"
+                                                            style={{ color: theme.primary }}
+                                                        />
+                                                    </g>
+                                                )}
+                                            </svg>
+
+                                            {/* Confetti Explosion Burst */}
+                                            {confettiBurst.length > 0 && (
+                                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                                    {confettiBurst.map(p => (
+                                                        <div
+                                                            key={p.id}
+                                                            className="absolute animate-confetti"
+                                                            style={{
+                                                                '--cx': p.cx,
+                                                                '--cy': p.cy,
+                                                                '--crot': p.crot,
+                                                                width: `${p.size}px`,
+                                                                height: `${p.size}px`,
+                                                                backgroundColor: p.color,
+                                                                borderRadius: p.isRound ? '50%' : '2px'
+                                                            }}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            )}
+                                            
+                                            {/* Center Content */}
+                                            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none" style={{ color: theme.textDark }}>
+                                                {isRinging ? (
+                                                    <div className="flex flex-col items-center justify-center pointer-events-auto">
+                                                        <button 
+                                                            onClick={handleStopAlarm}
+                                                            className="w-28 h-28 sm:w-32 sm:h-32 rounded-full flex flex-col items-center justify-center text-white shadow-xl hover:scale-110 active:scale-90 transition-transform animate-pulse-alarm cursor-pointer"
+                                                            style={{ backgroundColor: theme.primary }}
+                                                        >
+                                                            <Icon name="bell" size={30} className="mb-1" strokeWidth={2.5}/>
+                                                            <span className="font-black tracking-widest text-base sm:text-lg">STOP</span>
+                                                        </button>
+                                                    </div>
+                                                ) : isEditing ? (
+                                                    <div className="flex flex-col items-center justify-center gap-3 pointer-events-auto">
+                                                        <div className="flex items-center justify-center gap-1 sm:gap-2">
+                                                            <div className="flex items-baseline">
+                                                                <input 
+                                                                    ref={hoursInputRef} 
+                                                                    type="number" 
+                                                                    min="0" 
+                                                                    max="10" 
+                                                                    value={editHours} 
+                                                                    onChange={(e) => setEditHours(e.target.value)} 
+                                                                    className="w-16 sm:w-20 text-center bg-transparent outline-none text-4xl sm:text-5xl font-black tracking-tighter tabular-nums leading-none border-b-2 border-dashed" 
+                                                                    style={{ borderColor: theme.primary, color: theme.textDark }} 
+                                                                    placeholder="0" 
+                                                                />
+                                                                <span className="text-lg font-bold ml-1 opacity-50">h</span>
+                                                            </div>
+                                                            <span className="text-2xl font-black opacity-30">:</span>
+                                                            <div className="flex items-baseline">
+                                                                <input 
+                                                                    type="number" 
+                                                                    min="0" 
+                                                                    max="59" 
+                                                                    value={editMins} 
+                                                                    onChange={(e) => setEditMins(e.target.value)} 
+                                                                    className="w-16 sm:w-20 text-center bg-transparent outline-none text-4xl sm:text-5xl font-black tracking-tighter tabular-nums leading-none border-b-2 border-dashed" 
+                                                                    style={{ borderColor: theme.primary, color: theme.textDark }} 
+                                                                    placeholder="0" 
+                                                                />
+                                                                <span className="text-lg font-bold ml-1 opacity-50">m</span>
+                                                            </div>
+                                                        </div>
+                                                        <button 
+                                                            onClick={handleEditSubmit} 
+                                                            className="flex items-center gap-2 px-5 py-2 rounded-full text-white font-bold text-xs sm:text-sm shadow-md hover:scale-105 active:scale-95 transition-transform" 
+                                                            style={{ backgroundColor: theme.primary }}
+                                                        >
+                                                            <Icon name="save" size={15} /> Save
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <button 
+                                                        onClick={handleTimeClick} 
+                                                        title="Click to edit duration"
+                                                        className={`font-black tracking-tighter tabular-nums leading-none cursor-pointer focus:outline-none rounded-2xl hover:bg-black/5 px-4 py-2 transition-transform hover:scale-110 active:scale-95 pointer-events-auto ${timeLeft >= 3600 ? 'text-5xl sm:text-6xl' : 'text-6xl sm:text-7xl'} ${isActive ? 'animate-[pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite]' : ''}`}
+                                                    >
+                                                        {formatTimeDisplay(timeLeft)}
+                                                    </button>
+                                                )}
+                                                
+                                                {!isEditing && !isRinging && (
+                                                    <div className="mt-2 text-xs sm:text-sm font-bold uppercase tracking-widest opacity-60 flex items-center gap-1.5">
+                                                        <Icon name={currentModeInfo.icon} size={14} className={isActive ? 'animate-bounce' : ''} />
+                                                        {currentModeInfo.name}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Controls with Audio Visualizer */}
+                                        <div className={`flex items-center justify-center space-x-6 w-full mb-4 transition-opacity ${isRinging ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+                                            <div className="w-12 sm:w-14 flex items-center justify-center">
+                                                {isActive && (
+                                                    <div className="flex items-end gap-1 h-6">
+                                                        <div className="w-1 bg-current rounded-full animate-eq-1 opacity-60" style={{ color: theme.primary }} />
+                                                        <div className="w-1 bg-current rounded-full animate-eq-2 opacity-60" style={{ color: theme.primary }} />
+                                                        <div className="w-1 bg-current rounded-full animate-eq-3 opacity-60" style={{ color: theme.primary }} />
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <button 
+                                                onClick={toggleTimer} 
+                                                className="group relative flex items-center justify-center w-20 h-20 sm:w-22 sm:h-22 rounded-full shadow-lg hover:scale-110 active:scale-90 transition-all duration-300 focus:outline-none" 
+                                                style={{ 
+                                                    backgroundColor: theme.primary, 
+                                                    color: '#FFFFFF', 
+                                                    boxShadow: `0 14px 32px -4px ${theme.shadow}` 
+                                                }}
+                                            >
+                                                {isActive && (
+                                                    <div 
+                                                        className="absolute -inset-1 rounded-full animate-ping opacity-25 pointer-events-none"
+                                                        style={{ backgroundColor: theme.primary }}
+                                                    />
+                                                )}
+                                                {isActive ? (
+                                                    <Icon name="pause" fill="currentColor" size={32} />
+                                                ) : (
+                                                    <Icon name="play" fill="currentColor" size={32} className="ml-1" />
+                                                )}
+                                            </button>
+                                            <button 
+                                                onClick={resetTimer} 
+                                                title="Reset current timer"
+                                                className="flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full hover:scale-110 active:scale-90 transition-all duration-300 focus:outline-none text-current opacity-70 hover:opacity-100"
+                                                style={{ backgroundColor: theme.pillBg }}
+                                            >
+                                                <Icon name="rotateCcw" size={20} strokeWidth={2.5} />
+                                            </button>
+                                        </div>
+
+                                        {/* Status Subtitle */}
+                                        <div className="h-6 flex items-center" style={{ color: theme.textLight }}>
+                                            <p className="font-bold text-xs sm:text-sm tracking-wider uppercase opacity-80 flex items-center gap-1.5">
+                                                {isActive && <Icon name="sparkles" size={14} className="animate-spin text-amber-500" />}
+                                                {isEditing ? "Set custom minutes" : isRinging ? "Time's up!" : (isActive ? (activeMode === 'pomodoro' ? "Deep focus in progress..." : "Recharging...") : "Ready when you are")}
+                                                {isActive && <Icon name="sparkles" size={14} className="animate-spin text-amber-500" />}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {}
+                                {currentView === 'stats' && (
+                                    <div className="flex flex-col items-center w-full h-full">
+                                        <div 
+                                            className="w-full p-6 rounded-[2rem] mb-6 flex flex-col items-center justify-center text-center cozy-shadow-inner" 
+                                            style={{ backgroundColor: theme.ringBg }}
+                                        >
+                                            <span className="text-xs sm:text-sm font-bold uppercase tracking-widest mb-1 opacity-70">Total Focus Time</span>
+                                            <div className="text-3xl sm:text-4xl font-black tracking-tight" style={{ color: theme.primary }}>
+                                                {totalFocusHours > 0 && <span>{totalFocusHours}<span className="text-lg opacity-70 ml-1 mr-2">h</span></span>}
+                                                <span>{remainingFocusMins}<span className="text-lg opacity-70 ml-1">m</span></span>
+                                            </div>
+                                        </div>
+
+                                        <div className="w-full flex justify-between items-end mb-3 px-2">
+                                            <h3 className="font-bold text-base sm:text-lg">Recent Sessions</h3>
+                                            {sessions.length > 0 && !showClearConfirm && (
+                                                <button 
+                                                    onClick={() => setShowClearConfirm(true)} 
+                                                    className="text-xs sm:text-sm opacity-50 hover:opacity-100 transition-opacity flex items-center gap-1"
+                                                >
+                                                    <Icon name="trash2" size={14} /> Clear History
+                                                </button>
+                                            )}
+                                            {showClearConfirm && (
+                                                <div className="flex items-center gap-2 text-xs sm:text-sm">
+                                                    <span className="opacity-70">Are you sure?</span>
+                                                    <button onClick={clearStats} className="font-bold text-red-500 hover:text-red-600 transition-colors">Yes</button>
+                                                    <button onClick={() => setShowClearConfirm(false)} className="font-bold opacity-50 hover:opacity-100 transition-opacity">No</button>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="w-full flex-1 min-h-[240px] max-h-[280px] overflow-y-auto custom-scrollbar pr-2 pb-4 space-y-2.5">
+                                            {sessions.length === 0 ? (
+                                                <div className="w-full h-full flex flex-col items-center justify-center opacity-40 mt-8">
+                                                    <Icon name="calendar" size={40} className="mb-3" />
+                                                    <p className="font-bold text-center text-sm">No sessions recorded yet.<br/>Start your first pomodoro timer!</p>
+                                                </div>
+                                            ) : (
+                                                sessions.map((session) => {
+                                                    const mode = MODES_CONFIG[session.modeId] || MODES_CONFIG.pomodoro;
+                                                    const sessH = Math.floor(session.duration / 60);
+                                                    const sessM = session.duration % 60;
+                                                    const durationStr = sessH > 0 ? `${sessH}h ${sessM > 0 ? sessM + 'm' : ''}` : `${sessM}m`;
+
+                                                    return (
+                                                        <div 
+                                                            key={session.id} 
+                                                            className="w-full flex items-center justify-between p-3.5 rounded-2xl transition-colors"
+                                                            style={{ backgroundColor: theme.itemBg }}
+                                                        >
+                                                            <div className="flex items-center gap-3">
+                                                                <div 
+                                                                    className="p-2 rounded-full shadow-xs" 
+                                                                    style={{ 
+                                                                        backgroundColor: theme.isDark ? 'rgba(255,255,255,0.1)' : '#FFFFFF', 
+                                                                        color: theme.primary 
+                                                                    }}
+                                                                >
+                                                                    <Icon name={mode.icon} size={16} strokeWidth={2.5} />
+                                                                </div>
+                                                                <div className="flex flex-col">
+                                                                    <span className="font-bold text-sm">{mode.name}</span>
+                                                                    <span className="text-xs opacity-60 font-semibold">{formatStatsDate(session.timestamp)}</span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="font-black text-sm">{durationStr}</div>
+                                                        </div>
+                                                    );
+                                                })
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {}
+                                {currentView === 'settings' && (
+                                    <div className="flex flex-col items-start w-full h-full">
+                                        <div className="w-full mb-6">
+                                            <h3 className="font-bold text-base sm:text-lg mb-3 px-2">Alarm Sound</h3>
+                                            <div className="w-full flex flex-col gap-2.5">
+                                                {ALARM_TYPES.map(alarm => (
+                                                    <div 
+                                                        key={alarm.id}
+                                                        onClick={() => { setAlarmSound(alarm.id); if(previewId) togglePreview(alarm.id); }}
+                                                        className="w-full flex items-center justify-between p-3.5 rounded-2xl border-2 transition-all cursor-pointer"
+                                                        style={{ 
+                                                            borderColor: alarmSound === alarm.id ? theme.primary : 'transparent',
+                                                            backgroundColor: alarmSound === alarm.id ? theme.activePillBg : theme.itemBg
+                                                        }}
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <div 
+                                                                className="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors"
+                                                                style={{ borderColor: theme.primary, backgroundColor: alarmSound === alarm.id ? theme.primary : 'transparent' }}
+                                                            >
+                                                                {alarmSound === alarm.id && <div className="w-2 h-2 bg-white rounded-full" />}
+                                                            </div>
+                                                            <div className="flex flex-col">
+                                                                <span className="font-bold text-sm sm:text-base">{alarm.name}</span>
+                                                                <span className="text-xs opacity-60 font-semibold">{alarm.desc}</span>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <button 
+                                                            onClick={(e) => { e.stopPropagation(); togglePreview(alarm.id); }}
+                                                            className="p-2 rounded-full flex items-center justify-center transition-transform hover:scale-110 active:scale-95 shadow-xs"
+                                                            style={{ 
+                                                                backgroundColor: previewId === alarm.id ? theme.primary : (theme.isDark ? 'rgba(255,255,255,0.14)' : '#FFFFFF'), 
+                                                                color: previewId === alarm.id ? '#FFFFFF' : theme.primary 
+                                                            }}
+                                                            title="Preview alarm sound"
+                                                        >
+                                                            {previewId === alarm.id ? <Icon name="stopSquare" fill="currentColor" size={14} /> : <Icon name="play" fill="currentColor" size={14} className="ml-0.5" />}
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div 
+                                            className="w-full mt-auto p-4 rounded-2xl flex items-center gap-3.5"
+                                            style={{ backgroundColor: theme.itemBg }}
+                                        >
+                                            <div 
+                                                className="p-2.5 rounded-full shadow-xs" 
+                                                style={{ 
+                                                    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.1)' : '#FFFFFF', 
+                                                    color: theme.primary 
+                                                }}
+                                            >
+                                                <Icon name="bell" size={20} />
+                                            </div>
+                                            <p className="text-xs sm:text-sm font-semibold opacity-70 leading-snug">
+                                                Alarms ring continuously until stopped. Click the play button to preview.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {}
+                            <div 
+                                className="w-full mt-auto pt-6 flex flex-col items-center gap-3"
+                                style={{ borderTop: `2px solid ${theme.borderSubtle}` }}
+                            >
+                                {/* Theme Picker with 3 Light & 3 Dark groups */}
+                                {currentView === 'timer' && (
+                                    <div 
+                                        className="flex items-center gap-1.5 p-1.5 rounded-full cozy-shadow-inner mb-1"
+                                        style={{ backgroundColor: theme.pillBg }}
+                                    >
+                                        {/* Sun Indicator for 3 Light Themes */}
+                                        <div className="pl-1 pr-0.5 opacity-60 flex items-center" title="Light Themes">
+                                            <Icon name="sun" size={14} />
+                                        </div>
+                                        {lightThemes.map(t => (
+                                            <button
+                                                key={t.id}
+                                                onClick={() => setActiveThemeId(t.id)}
+                                                className="w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-115 active:scale-90 shadow-xs"
+                                                style={{ backgroundColor: t.primary }}
+                                                title={`Switch to ${t.name} (Light)`}
+                                            >
+                                                {activeThemeId === t.id && <Icon name="check" size={13} className="text-white" strokeWidth={3} />}
+                                            </button>
+                                        ))}
+
+                                        {/* Divider */}
+                                        <div 
+                                            className="w-[1px] h-4 mx-1 opacity-25" 
+                                            style={{ backgroundColor: theme.textDark }} 
+                                        />
+
+                                        {/* Moon Indicator for 3 Dark Themes */}
+                                        <div className="pl-0.5 pr-0.5 opacity-60 flex items-center" title="Dark Themes">
+                                            <Icon name="moon" size={13} />
+                                        </div>
+                                        {darkThemes.map(t => (
+                                            <button
+                                                key={t.id}
+                                                onClick={() => setActiveThemeId(t.id)}
+                                                className="w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-115 active:scale-90 shadow-xs"
+                                                style={{ backgroundColor: t.primary }}
+                                                title={`Switch to ${t.name} (Dark)`}
+                                            >
+                                                {activeThemeId === t.id && <Icon name="check" size={13} className="text-white" strokeWidth={3} />}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* Main Tab Navigation */}
+                                <div 
+                                    className="flex rounded-full p-1 w-full max-w-[260px] justify-between relative cozy-shadow-inner"
+                                    style={{ backgroundColor: theme.pillBg }}
+                                >
+                                    <div 
+                                        className="absolute inset-y-1 w-[calc(33.33%-2px)] rounded-full transition-all duration-300 shadow-sm" 
+                                        style={{ 
+                                            backgroundColor: theme.activePillBg,
+                                            left: currentView === 'timer' ? '3px' : currentView === 'stats' ? 'calc(33.33% + 1px)' : 'calc(66.66% - 1px)' 
+                                        }} 
+                                    />
+                                    
+                                    <button 
+                                        onClick={() => handleViewChange('timer')} 
+                                        className={`relative z-10 w-1/3 py-2 flex justify-center items-center font-bold text-sm transition-colors duration-300 ${currentView === 'timer' ? '' : 'opacity-50 hover:opacity-100'}`} 
+                                        style={{ color: currentView === 'timer' ? theme.primary : theme.textDark }} 
+                                        title="Timer"
+                                    >
+                                        <Icon name="timerIcon" size={18} />
+                                    </button>
+                                    <button 
+                                        onClick={() => handleViewChange('stats')} 
+                                        className={`relative z-10 w-1/3 py-2 flex justify-center items-center font-bold text-sm transition-colors duration-300 ${currentView === 'stats' ? '' : 'opacity-50 hover:opacity-100'}`} 
+                                        style={{ color: currentView === 'stats' ? theme.primary : theme.textDark }} 
+                                        title="Statistics"
+                                    >
+                                        <Icon name="barChart2" size={18} />
+                                    </button>
+                                    <button 
+                                        onClick={() => handleViewChange('settings')} 
+                                        className={`relative z-10 w-1/3 py-2 flex justify-center items-center font-bold text-sm transition-colors duration-300 ${currentView === 'settings' ? '' : 'opacity-50 hover:opacity-100'}`} 
+                                        style={{ color: currentView === 'settings' ? theme.primary : theme.textDark }} 
+                                        title="Settings"
+                                    >
+                                        <Icon name="settings" size={18} />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
